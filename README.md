@@ -9,12 +9,20 @@ Sistema robusto e seguro para sincronização automática de data e hora do Wind
 
 ## 🚀 Características
 
+### 🎯 Funcionalidades Principais
 - **Sincronização NTP**: Obtém hora precisa de servidores NTP confiáveis
+- **Interface Gráfica**: Dashboard moderno com monitoramento em tempo real
+- **Arquitetura MVC**: Código organizado seguindo padrão Model-View-Controller
 - **Execução como Serviço**: Funciona como serviço Windows para operação contínua
+- **Monitoramento Visual**: Métricas de latência, precisão e status de conectividade
+
+### 🔧 Recursos Técnicos
 - **Logging Completo**: Sistema de auditoria com rotação automática de logs
 - **Tratamento de Erros**: Recuperação automática de falhas de rede e permissões
 - **Configuração Flexível**: Todas as configurações via variáveis de ambiente
 - **Validação de Segurança**: Verificações de privilégios e validações de entrada
+- **Notificações por Email**: Alertas automáticos para falhas críticas
+- **Banco de Dados**: Armazenamento de métricas históricas e configurações
 
 ## 📋 Pré-requisitos
 
@@ -60,44 +68,79 @@ python windows_service.py start
 
 ## ⚙️ Configuração
 
+### 📝 Arquivo de Configuração (.env)
 Edite o arquivo `.env` com suas preferências:
 
 ```env
-# Servidor NTP (padrão: pool.ntp.org)
+# === Configurações do Servidor NTP ===
 NTP_SERVER=pool.ntp.org
 NTP_TIMEOUT=10
+NTP_PORT=123
 
-# Configurações de logging
+# === Configurações de Monitoramento ===
+SYNC_INTERVAL_MINUTES=60
+TIME_TOLERANCE_SECONDS=5
+MAX_RETRY_ATTEMPTS=3
+
+# === Configurações de Logging ===
 LOG_LEVEL=INFO
 LOG_FILE_PATH=logs/time_sync.log
 LOG_MAX_SIZE=10485760
 LOG_BACKUP_COUNT=5
 
-# Intervalo de sincronização (em minutos)
-SYNC_INTERVAL_MINUTES=60
+# === Configurações de Email (Opcional) ===
+EMAIL_ENABLED=false
+EMAIL_SMTP_SERVER=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_USERNAME=seu_email@gmail.com
+EMAIL_PASSWORD=sua_senha_app
+EMAIL_TO=admin@empresa.com
 
-# Tolerância de diferença (em segundos)
-TIME_TOLERANCE_SECONDS=5
+# === Configurações da Interface ===
+UI_THEME=modern
+UI_UPDATE_INTERVAL=5
+UI_SHOW_GRAPHS=true
+UI_AUTO_START=false
+
+# === Configurações do Banco de Dados ===
+DB_PATH=data/ntp_monitor.db
+DB_BACKUP_ENABLED=true
+DB_RETENTION_DAYS=30
 ```
+
+### 🔧 Configurações Avançadas
+Para configurações mais específicas, edite diretamente os arquivos de modelo em `app/models/config_models.py`.
 
 ## 🎯 Modos de Execução
 
-### 1. Execução Única
+### 1. Interface Gráfica (Dashboard)
+```bash
+python main.py
+```
+**Funcionalidades do Dashboard:**
+- 📊 **Monitoramento em Tempo Real**: Visualização de métricas NTP atualizadas
+- 🎛️ **Controles Interativos**: Iniciar/parar monitoramento com um clique
+- 📈 **Gráficos de Performance**: Latência, precisão e histórico de sincronização
+- ⚙️ **Configurações Dinâmicas**: Alterar servidor NTP e intervalos sem reiniciar
+- 🔔 **Alertas Visuais**: Notificações para falhas e problemas de conectividade
+- 📋 **Logs Integrados**: Visualização de logs diretamente na interface
+
+### 2. Execução Única (Linha de Comando)
 ```bash
 python main.py --once
 ```
 
-### 2. Verificação de Status
+### 3. Verificação de Status
 ```bash
 python main.py --status
 ```
 
-### 3. Execução Contínua
+### 4. Execução Contínua (Sem Interface)
 ```bash
-python main.py
+python main.py --headless
 ```
 
-### 4. Como Serviço Windows
+### 5. Como Serviço Windows
 ```bash
 # Instalar
 python windows_service.py install
@@ -142,13 +185,15 @@ Mostra:
 
 ## 🛠️ Solução de Problemas
 
-### Erro de Privilégios
+### ❌ Problemas Comuns
+
+#### Erro de Privilégios
 ```
 ERRO: Privilégios administrativos necessários
 ```
 **Solução**: Execute como administrador
 
-### Erro de Conectividade NTP
+#### Erro de Conectividade NTP
 ```
 ERRO: Timeout ao conectar com servidor NTP
 ```
@@ -157,7 +202,7 @@ ERRO: Timeout ao conectar com servidor NTP
 - Teste servidor NTP alternativo
 - Verifique firewall/proxy
 
-### Serviço não inicia
+#### Serviço não inicia
 ```
 ERRO: Falha ao iniciar serviço
 ```
@@ -166,25 +211,119 @@ ERRO: Falha ao iniciar serviço
 - Confirme instalação das dependências
 - Execute diagnóstico: `python main.py --status`
 
+### 🖥️ Problemas da Interface Gráfica
+
+#### Interface não abre
+```
+ERRO: Too early to create variable: no default root window
+```
+**Soluções**:
+- Verifique se o Tkinter está instalado: `python -m tkinter`
+- Execute: `python main.py --headless` para modo sem interface
+- Reinstale dependências: `pip install -r requirements.txt`
+
+#### Dashboard travando
+```
+ERRO: Interface não responde
+```
+**Soluções**:
+- Feche e reabra a aplicação
+- Verifique logs para erros de threading
+- Execute com modo debug: `python main.py --debug`
+
+### 🗄️ Problemas do Banco de Dados
+
+#### Erro de acesso ao banco
+```
+ERRO: Database is locked
+```
+**Soluções**:
+- Feche todas as instâncias da aplicação
+- Verifique permissões na pasta `data/`
+- Execute: `python -c "import sqlite3; sqlite3.connect('data/ntp_monitor.db').close()"`
+
+#### Dados corrompidos
+```
+ERRO: Database disk image is malformed
+```
+**Soluções**:
+- Faça backup do banco atual
+- Delete `data/ntp_monitor.db`
+- Reinicie a aplicação (criará novo banco)
+
+### 📧 Problemas de Email
+
+#### Falha no envio de emails
+```
+ERRO: SMTP Authentication failed
+```
+**Soluções**:
+- Verifique credenciais no arquivo `.env`
+- Use senha de aplicativo (Gmail, Outlook)
+- Confirme configurações SMTP do provedor
+
 ## 📁 Estrutura do Projeto
+
+### 🏗️ Arquitetura MVC
+O projeto foi refatorado seguindo o padrão **Model-View-Controller (MVC)** para melhor organização e manutenibilidade:
 
 ```
 projeto-automatic-windows-hora/
-├── main.py                 # Script principal
-├── config.py              # Configurações
-├── ntp_client.py          # Cliente NTP
-├── windows_time_sync.py   # Sincronização Windows
-├── logger_config.py       # Sistema de logging
-├── windows_service.py     # Serviço Windows
-├── install_service.bat    # Instalador automático
-├── requirements.txt       # Dependências Python
-├── .env.example          # Exemplo de configuração
-└── logs/                 # Diretório de logs
+├── app/                      # 📦 Aplicação principal (MVC)
+│   ├── controllers/          # 🎮 Controladores (lógica de negócio)
+│   │   ├── dashboard_controller.py  # Controlador do dashboard
+│   │   └── ntp_controller.py        # Controlador NTP
+│   ├── models/              # 📊 Modelos (estruturas de dados)
+│   │   ├── config_models.py         # Modelos de configuração
+│   │   ├── ntp_metrics.py          # Métricas NTP
+│   │   └── server_config.py        # Configuração de servidores
+│   ├── services/            # 🔧 Serviços (lógica de aplicação)
+│   │   ├── config_service.py       # Gerenciamento de configurações
+│   │   ├── database_service.py     # Acesso ao banco de dados
+│   │   ├── email_service.py        # Notificações por email
+│   │   └── ntp_service.py          # Comunicação NTP
+│   ├── utils/               # 🛠️ Utilitários
+│   │   ├── formatters.py           # Formatação de dados
+│   │   ├── logger.py               # Sistema de logging
+│   │   └── validators.py           # Validações
+│   └── views/               # 🖥️ Interface (apresentação)
+│       ├── components.py           # Componentes reutilizáveis
+│       └── dashboard_view.py       # Interface do dashboard
+├── data/                    # 💾 Banco de dados
+│   └── ntp_monitor.db      # SQLite database
+├── exports/                 # 📤 Relatórios exportados
+├── main.py                 # 🚀 Ponto de entrada principal
+├── requirements.txt        # 📋 Dependências Python
+├── .env.example           # ⚙️ Exemplo de configuração
+└── logs/                  # 📝 Diretório de logs
     └── time_sync.log     # Arquivo de log principal
+```
+
+### 📚 Arquivos Legados (Compatibilidade)
+```
+├── config.py              # ⚠️ Configurações (legado)
+├── ntp_client.py          # ⚠️ Cliente NTP (legado)
+├── windows_time_sync.py   # ⚠️ Sincronização Windows (legado)
+├── logger_config.py       # ⚠️ Sistema de logging (legado)
+├── windows_service.py     # ⚠️ Serviço Windows (legado)
+└── install_service.bat    # ⚠️ Instalador automático (legado)
 ```
 
 ## 🔄 Comandos Úteis
 
+### 🖥️ Interface Gráfica
+```bash
+# Iniciar dashboard completo
+python main.py
+
+# Iniciar em modo debug
+python main.py --debug
+
+# Iniciar sem interface (headless)
+python main.py --headless
+```
+
+### 🔧 Linha de Comando
 ```bash
 # Verificar status do serviço
 sc query WindowsTimeSyncService
@@ -193,10 +332,25 @@ sc query WindowsTimeSyncService
 Get-Content logs\time_sync.log -Wait -Tail 10
 
 # Testar conectividade NTP
-python -c "from ntp_client import NTPClient; print(NTPClient().test_connectivity())"
+python -c "from app.services.ntp_service import NTPService; print(NTPService().test_connectivity())"
 
 # Forçar sincronização única
 python main.py --once
+
+# Exportar métricas para CSV
+python -c "from app.services.database_service import DatabaseService; DatabaseService().export_metrics()"
+```
+
+### 🗄️ Banco de Dados
+```bash
+# Verificar integridade do banco
+python -c "from app.services.database_service import DatabaseService; DatabaseService().check_integrity()"
+
+# Fazer backup do banco
+python -c "from app.services.database_service import DatabaseService; DatabaseService().backup_database()"
+
+# Limpar dados antigos
+python -c "from app.services.database_service import DatabaseService; DatabaseService().cleanup_old_data()"
 ```
 
 ## 📊 Status do Projeto
@@ -209,19 +363,56 @@ python main.py --once
 
 ## 🛠️ Tecnologias Utilizadas
 
+### 🐍 Backend & Core
 - **Python 3.8+**: Linguagem principal
 - **ntplib**: Cliente NTP para sincronização
 - **pywin32**: Integração com APIs do Windows
 - **schedule**: Agendamento de tarefas
 - **python-dotenv**: Gerenciamento de configurações
 
+### 🖥️ Interface Gráfica
+- **tkinter**: Interface gráfica nativa do Python
+- **matplotlib**: Gráficos e visualizações
+- **PIL (Pillow)**: Processamento de imagens
+
+### 🗄️ Banco de Dados & Persistência
+- **sqlite3**: Banco de dados local
+- **json**: Configurações e cache
+- **csv**: Exportação de relatórios
+
+### 📧 Comunicação & Alertas
+- **smtplib**: Envio de emails
+- **email**: Formatação de mensagens
+- **logging**: Sistema de auditoria
+
+### 🏗️ Arquitetura & Padrões
+- **MVC Pattern**: Separação de responsabilidades
+- **Service Layer**: Lógica de negócio centralizada
+- **Repository Pattern**: Acesso a dados abstraído
+- **Observer Pattern**: Comunicação entre componentes
+
 ## 📈 Roadmap
 
-- [ ] Interface web para monitoramento
-- [ ] Suporte a múltiplos servidores NTP
-- [ ] Notificações por email
-- [ ] Métricas de performance
-- [ ] Dashboard de monitoramento
+### ✅ Implementado (v2.0)
+- [x] **Arquitetura MVC**: Refatoração completa seguindo padrões de design
+- [x] **Interface Gráfica**: Dashboard moderno com Tkinter
+- [x] **Banco de Dados**: Persistência de métricas e configurações
+- [x] **Sistema de Alertas**: Notificações por email configuráveis
+- [x] **Logging Avançado**: Sistema robusto de auditoria
+- [x] **Configuração Flexível**: Gerenciamento via arquivo .env
+
+### 🔄 Em Desenvolvimento (v2.1)
+- [ ] **Testes Automatizados**: Cobertura completa de testes unitários
+- [ ] **Documentação API**: Documentação técnica detalhada
+- [ ] **Performance**: Otimizações de memória e CPU
+
+### 🚀 Planejado (v3.0)
+- [ ] **Interface Web**: Dashboard web responsivo
+- [ ] **API REST**: Endpoints para integração externa
+- [ ] **Múltiplos Servidores**: Suporte a pool de servidores NTP
+- [ ] **Métricas Avançadas**: Análise estatística e tendências
+- [ ] **Alertas Inteligentes**: Machine learning para detecção de anomalias
+- [ ] **Relatórios**: Geração automática de relatórios PDF
 
 ## 📝 Licença
 
