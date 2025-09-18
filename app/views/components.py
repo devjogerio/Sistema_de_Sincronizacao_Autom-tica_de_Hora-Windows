@@ -3,8 +3,7 @@ Componentes visuais reutilizáveis para a interface.
 Contém widgets e elementos de UI modulares.
 """
 
-import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -166,9 +165,9 @@ class MetricsChart:
 
 class StatusIndicator:
     """
-    Componente para indicação visual de status.
+    Componente para indicação visual de status usando CustomTkinter.
     
-    Exibe status de servidores com cores e ícones.
+    Exibe status de servidores com cores e ícones modernos.
     """
     
     def __init__(self, parent):
@@ -179,14 +178,18 @@ class StatusIndicator:
             parent: Widget pai
         """
         self.parent = parent
-        self.frame = ttk.Frame(parent)
+        self.frame = ctk.CTkFrame(parent)
         
         # Elementos visuais
-        self.status_label = ttk.Label(self.frame, text="Status", font=('Arial', 12, 'bold'))
-        self.status_label.pack(pady=5)
+        self.status_label = ctk.CTkLabel(
+            self.frame, 
+            text="Status", 
+            font=ctk.CTkFont(family="Arial", size=14, weight="bold")
+        )
+        self.status_label.pack(pady=10)
         
-        self.indicators_frame = ttk.Frame(self.frame)
-        self.indicators_frame.pack(fill='both', expand=True)
+        self.indicators_frame = ctk.CTkFrame(self.frame)
+        self.indicators_frame.pack(fill='both', expand=True, padx=10, pady=5)
         
         self.indicators = {}
     
@@ -208,14 +211,14 @@ class StatusIndicator:
     
     def _create_server_indicator(self, server: str, status: Dict):
         """
-        Cria indicador para um servidor específico.
+        Cria indicador para um servidor específico usando CustomTkinter.
         
         Args:
             server: Nome do servidor
             status: Status do servidor
         """
         # Frame do indicador
-        indicator_frame = ttk.Frame(self.indicators_frame)
+        indicator_frame = ctk.CTkFrame(self.indicators_frame)
         indicator_frame.pack(fill='x', padx=5, pady=2)
         
         # Determina cor do status
@@ -236,16 +239,28 @@ class StatusIndicator:
             status_desc = 'Indisponível'
         
         # Indicador visual
-        status_indicator = tk.Label(indicator_frame, text=status_text, 
-                                  fg=status_color, font=('Arial', 16))
-        status_indicator.pack(side='left', padx=(0, 5))
+        status_indicator = ctk.CTkLabel(
+            indicator_frame, 
+            text=status_text,
+            text_color=status_color,
+            font=ctk.CTkFont(size=16)
+        )
+        status_indicator.pack(side='left', padx=(5, 5))
         
         # Nome do servidor
-        server_label = ttk.Label(indicator_frame, text=server, font=('Arial', 10, 'bold'))
+        server_label = ctk.CTkLabel(
+            indicator_frame, 
+            text=server, 
+            font=ctk.CTkFont(size=12, weight="bold")
+        )
         server_label.pack(side='left', padx=(0, 10))
         
         # Status descritivo
-        desc_label = ttk.Label(indicator_frame, text=status_desc, font=('Arial', 9))
+        desc_label = ctk.CTkLabel(
+            indicator_frame, 
+            text=status_desc, 
+            font=ctk.CTkFont(size=10)
+        )
         desc_label.pack(side='left')
         
         # Métricas adicionais
@@ -254,9 +269,13 @@ class StatusIndicator:
             if 'offset' in status:
                 metrics_text += f" | Offset: {status['offset']:.3f}s"
             
-            metrics_label = ttk.Label(indicator_frame, text=metrics_text, 
-                                    font=('Arial', 8), foreground='#666666')
-            metrics_label.pack(side='right')
+            metrics_label = ctk.CTkLabel(
+                indicator_frame, 
+                text=metrics_text,
+                font=ctk.CTkFont(size=9),
+                text_color="#666666"
+            )
+            metrics_label.pack(side='right', padx=(0, 5))
         
         self.indicators[server] = {
             'frame': indicator_frame,
@@ -276,9 +295,10 @@ class StatusIndicator:
 
 class ServerTable:
     """
-    Componente para exibição tabular de servidores.
+    Componente para exibição tabular de servidores usando CustomTkinter.
     
     Mostra informações detalhadas dos servidores em formato de tabela.
+    Nota: CustomTkinter não possui Treeview nativo, usando CTkScrollableFrame.
     """
     
     def __init__(self, parent):
@@ -291,68 +311,67 @@ class ServerTable:
         self.parent = parent
         
         # Frame principal
-        self.frame = ttk.Frame(parent)
+        self.frame = ctk.CTkFrame(parent)
         
         # Título
-        self.title_label = ttk.Label(self.frame, text="Servidores NTP", 
-                                   font=('Arial', 12, 'bold'))
-        self.title_label.pack(pady=(0, 10))
+        self.title_label = ctk.CTkLabel(
+            self.frame, 
+            text="Servidores NTP",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        self.title_label.pack(pady=(10, 15))
         
-        # Configuração da tabela
-        self.columns = ('servidor', 'status', 'resposta', 'offset', 'delay', 'stratum')
-        self.tree = ttk.Treeview(self.frame, columns=self.columns, show='headings', height=10)
+        # Frame scrollável para simular tabela
+        self.table_frame = ctk.CTkScrollableFrame(self.frame, height=300)
+        self.table_frame.pack(fill='both', expand=True, padx=10, pady=(0, 10))
         
-        # Configuração das colunas
-        column_configs = {
-            'servidor': {'text': 'Servidor', 'width': 150, 'anchor': 'w'},
-            'status': {'text': 'Status', 'width': 100, 'anchor': 'center'},
-            'resposta': {'text': 'Resposta (s)', 'width': 100, 'anchor': 'center'},
-            'offset': {'text': 'Offset (s)', 'width': 100, 'anchor': 'center'},
-            'delay': {'text': 'Delay (s)', 'width': 100, 'anchor': 'center'},
-            'stratum': {'text': 'Stratum', 'width': 80, 'anchor': 'center'}
-        }
+        # Cabeçalho da tabela
+        self._create_header()
         
-        for col, config in column_configs.items():
-            self.tree.heading(col, text=config['text'])
-            self.tree.column(col, width=config['width'], anchor=config['anchor'])
+        # Lista para armazenar linhas da tabela
+        self.table_rows = []
         
-        # Scrollbar
-        scrollbar = ttk.Scrollbar(self.frame, orient='vertical', command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
+    def _create_header(self):
+        """Cria o cabeçalho da tabela."""
+        header_frame = ctk.CTkFrame(self.table_frame)
+        header_frame.pack(fill='x', pady=(0, 5))
         
-        # Layout
-        self.tree.pack(side='left', fill='both', expand=True)
-        scrollbar.pack(side='right', fill='y')
+        headers = ['Servidor', 'Status', 'Resposta (s)', 'Offset (s)', 'Delay (s)', 'Stratum']
+        widths = [150, 100, 100, 100, 100, 80]
         
-        # Tags para colorir linhas
-        self.tree.tag_configure('healthy', background='#E8F5E8')
-        self.tree.tag_configure('warning', background='#FFF3E0')
-        self.tree.tag_configure('error', background='#FFEBEE')
-    
+        for i, (header, width) in enumerate(zip(headers, widths)):
+            label = ctk.CTkLabel(
+                header_frame,
+                text=header,
+                font=ctk.CTkFont(size=12, weight="bold"),
+                width=width
+            )
+            label.grid(row=0, column=i, padx=2, sticky='ew')
     def update_data(self, metrics: List[NTPMetrics]):
         """
-        Atualiza os dados da tabela.
+        Atualiza os dados da tabela usando CustomTkinter.
         
         Args:
             metrics: Lista de métricas dos servidores
         """
         # Limpa dados existentes
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        for row in self.table_rows:
+            row.destroy()
+        self.table_rows.clear()
         
         # Adiciona novos dados
-        for metric in metrics:
-            # Determina status e tag
+        for i, metric in enumerate(metrics):
+            # Determina status e cor
             if metric.is_available:
                 if metric.is_healthy():
                     status = "✅ Saudável"
-                    tag = 'healthy'
+                    bg_color = "#E8F5E8"
                 else:
                     status = "⚠️ Disponível"
-                    tag = 'warning'
+                    bg_color = "#FFF3E0"
             else:
                 status = "❌ Indisponível"
-                tag = 'error'
+                bg_color = "#FFEBEE"
             
             # Formata valores
             response_time = f"{metric.response_time:.3f}" if metric.is_available else "N/A"
@@ -360,15 +379,24 @@ class ServerTable:
             delay = f"{metric.delay:.3f}" if metric.is_available else "N/A"
             stratum = str(metric.stratum) if metric.is_available and metric.stratum > 0 else "N/A"
             
-            # Insere linha na tabela
-            self.tree.insert('', 'end', values=(
-                metric.server,
-                status,
-                response_time,
-                offset,
-                delay,
-                stratum
-            ), tags=(tag,))
+            # Cria linha da tabela
+            row_frame = ctk.CTkFrame(self.table_frame, fg_color=bg_color)
+            row_frame.pack(fill='x', pady=1)
+            
+            # Dados da linha
+            data = [metric.server, status, response_time, offset, delay, stratum]
+            widths = [150, 100, 100, 100, 100, 80]
+            
+            for j, (value, width) in enumerate(zip(data, widths)):
+                label = ctk.CTkLabel(
+                    row_frame,
+                    text=str(value),
+                    font=ctk.CTkFont(size=10),
+                    width=width
+                )
+                label.grid(row=0, column=j, padx=2, sticky='ew')
+            
+            self.table_rows.append(row_frame)
     
     def pack(self, **kwargs):
         """Empacota o widget."""

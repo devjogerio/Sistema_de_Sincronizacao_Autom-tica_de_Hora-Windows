@@ -110,7 +110,7 @@ class NTPController:
                     self._notify_callbacks('metrics_updated', {'metrics': metrics})
                 
                 # Aguarda próximo ciclo
-                time.sleep(self.monitoring_config.check_interval)
+                time.sleep(self.monitoring_config.update_interval)
                 
             except Exception as e:
                 logger.error(f"Erro no loop de monitoramento: {e}")

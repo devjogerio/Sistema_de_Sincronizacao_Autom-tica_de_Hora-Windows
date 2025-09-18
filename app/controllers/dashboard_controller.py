@@ -212,7 +212,7 @@ class DashboardController:
                 self._perform_monitoring_check()
                 
                 # Aguarda próximo ciclo
-                interval = self.config.monitoring.check_interval if self.config.monitoring else 60
+                interval = self.config.monitoring.update_interval if self.config.monitoring else 60
                 self.stop_monitoring_event.wait(interval)
                 
             except Exception as e:

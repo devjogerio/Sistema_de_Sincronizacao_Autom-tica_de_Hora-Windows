@@ -1,10 +1,10 @@
 """
 View principal do dashboard NTP Monitor.
-Interface gráfica principal da aplicação.
+Interface gráfica principal da aplicação usando CustomTkinter.
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox
+import customtkinter as ctk
+from tkinter import messagebox
 import threading
 import logging
 from datetime import datetime
@@ -14,6 +14,10 @@ from .components import MetricsChart, StatusIndicator, ServerTable
 from ..models.ntp_metrics import NTPMetrics
 
 logger = logging.getLogger(__name__)
+
+# Configuração do tema CustomTkinter
+ctk.set_appearance_mode("system")  # Modes: system (default), light, dark
+ctk.set_default_color_theme("blue")  # Themes: blue (default), dark-blue, green
 
 
 class DashboardView:
@@ -59,19 +63,16 @@ class DashboardView:
         logger.info("Dashboard view inicializada")
     
     def setup_ui(self):
-        """Configura a interface gráfica."""
-        self.root = tk.Tk()
+        """Configura a interface gráfica usando CustomTkinter."""
+        self.root = ctk.CTk()
         self.root.title(self.title)
         self.root.geometry("1200x800")
         self.root.minsize(800, 600)
         
         # Cria variáveis de controle após criar root
-        self.monitoring_status = tk.StringVar(value="Parado")
-        self.last_update = tk.StringVar(value="Nunca")
-        self.selected_metric = tk.StringVar(value="response_time")
-        
-        # Configuração de estilo
-        self._setup_styles()
+        self.monitoring_status = ctk.StringVar(value="Parado")
+        self.last_update = ctk.StringVar(value="Nunca")
+        self.selected_metric = ctk.StringVar(value="response_time")
         
         # Layout principal
         self._create_main_layout()
@@ -86,44 +87,23 @@ class DashboardView:
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         
         logger.info("Interface gráfica configurada")
-    
-    def _setup_styles(self):
-        """Configura estilos da interface."""
-        style = ttk.Style()
-        
-        # Tema moderno
-        try:
-            style.theme_use('clam')
-        except:
-            pass  # Usa tema padrão se 'clam' não estiver disponível
-        
-        # Cores personalizadas
-        style.configure('Title.TLabel', font=('Arial', 16, 'bold'))
-        style.configure('Subtitle.TLabel', font=('Arial', 12, 'bold'))
-        style.configure('Status.TLabel', font=('Arial', 10))
-        
-        # Botões
-        style.configure('Action.TButton', font=('Arial', 10, 'bold'))
-        style.map('Action.TButton',
-                 background=[('active', '#4CAF50')])
-    
     def _create_main_layout(self):
-        """Cria o layout principal da interface."""
+        """Cria o layout principal da interface usando CustomTkinter."""
         # Frame principal
-        main_frame = ttk.Frame(self.root)
+        main_frame = ctk.CTkFrame(self.root)
         main_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
         # Título
-        title_label = ttk.Label(main_frame, text="NTP Monitor Dashboard", 
-                               style='Title.TLabel')
-        title_label.pack(pady=(0, 20))
+        title_label = ctk.CTkLabel(main_frame, text="NTP Monitor Dashboard", 
+                                  font=ctk.CTkFont(size=20, weight="bold"))
+        title_label.pack(pady=(10, 20))
         
         # Frame de controles
         self._create_controls_frame(main_frame)
         
-        # Notebook para abas
-        self.notebook = ttk.Notebook(main_frame)
-        self.notebook.pack(fill='both', expand=True, pady=(10, 0))
+        # Tabview para abas (substitui Notebook)
+        self.tabview = ctk.CTkTabview(main_frame)
+        self.tabview.pack(fill='both', expand=True, pady=(10, 0))
         
         # Aba de visão geral
         self._create_overview_tab()
@@ -136,113 +116,136 @@ class DashboardView:
     
     def _create_controls_frame(self, parent):
         """
-        Cria frame com controles principais.
+        Cria frame com controles principais usando CustomTkinter.
         
         Args:
             parent: Widget pai
         """
-        controls_frame = ttk.LabelFrame(parent, text="Controles", padding=10)
-        controls_frame.pack(fill='x', pady=(0, 10))
+        controls_frame = ctk.CTkFrame(parent)
+        controls_frame.pack(fill='x', pady=(0, 10), padx=10)
+        
+        # Frame interno para organização
+        inner_frame = ctk.CTkFrame(controls_frame)
+        inner_frame.pack(fill='x', padx=10, pady=10)
         
         # Frame esquerdo - botões de ação
-        left_frame = ttk.Frame(controls_frame)
+        left_frame = ctk.CTkFrame(inner_frame)
         left_frame.pack(side='left', fill='x', expand=True)
         
         # Botões de controle
-        self.start_button = ttk.Button(left_frame, text="▶ Iniciar Monitoramento",
-                                      command=self._on_start_monitoring,
-                                      style='Action.TButton')
-        self.start_button.pack(side='left', padx=(0, 10))
+        self.start_button = ctk.CTkButton(left_frame, text="▶ Iniciar Monitoramento",
+                                         command=self._on_start_monitoring,
+                                         fg_color="green", hover_color="darkgreen")
+        self.start_button.pack(side='left', padx=(10, 10), pady=10)
         
-        self.stop_button = ttk.Button(left_frame, text="⏹ Parar Monitoramento",
-                                     command=self._on_stop_monitoring,
-                                     state='disabled')
-        self.stop_button.pack(side='left', padx=(0, 10))
+        self.stop_button = ctk.CTkButton(left_frame, text="⏹ Parar Monitoramento",
+                                        command=self._on_stop_monitoring,
+                                        state='disabled',
+                                        fg_color="red", hover_color="darkred")
+        self.stop_button.pack(side='left', padx=(0, 10), pady=10)
         
-        self.refresh_button = ttk.Button(left_frame, text="🔄 Atualizar",
-                                        command=self._on_refresh_data)
-        self.refresh_button.pack(side='left', padx=(0, 10))
+        self.refresh_button = ctk.CTkButton(left_frame, text="🔄 Atualizar",
+                                           command=self._on_refresh_data)
+        self.refresh_button.pack(side='left', padx=(0, 10), pady=10)
         
         # Frame direito - informações de status
-        right_frame = ttk.Frame(controls_frame)
-        right_frame.pack(side='right')
+        right_frame = ctk.CTkFrame(inner_frame)
+        right_frame.pack(side='right', padx=10, pady=10)
         
         # Status do monitoramento
-        ttk.Label(right_frame, text="Status:").pack(side='left', padx=(0, 5))
-        status_label = ttk.Label(right_frame, textvariable=self.monitoring_status,
-                                style='Status.TLabel')
-        status_label.pack(side='left', padx=(0, 20))
+        ctk.CTkLabel(right_frame, text="Status:").pack(side='left', padx=(10, 5), pady=10)
+        status_label = ctk.CTkLabel(right_frame, textvariable=self.monitoring_status,
+                                   font=ctk.CTkFont(weight="bold"))
+        status_label.pack(side='left', padx=(0, 20), pady=10)
         
         # Última atualização
-        ttk.Label(right_frame, text="Última atualização:").pack(side='left', padx=(0, 5))
-        update_label = ttk.Label(right_frame, textvariable=self.last_update,
-                                style='Status.TLabel')
-        update_label.pack(side='left')
+        ctk.CTkLabel(right_frame, text="Última atualização:").pack(side='left', padx=(0, 5), pady=10)
+        update_label = ctk.CTkLabel(right_frame, textvariable=self.last_update)
+        update_label.pack(side='left', padx=(0, 10), pady=10)
     
     def _create_overview_tab(self):
-        """Cria aba de visão geral."""
-        overview_frame = ttk.Frame(self.notebook)
-        self.notebook.add(overview_frame, text="📊 Visão Geral")
+        """Cria aba de visão geral usando CustomTkinter."""
+        # Adiciona aba ao tabview
+        self.tabview.add("📊 Visão Geral")
+        overview_frame = self.tabview.tab("📊 Visão Geral")
         
         # Frame superior - indicadores de status
-        status_frame = ttk.LabelFrame(overview_frame, text="Status dos Servidores", padding=10)
+        status_frame = ctk.CTkFrame(overview_frame)
         status_frame.pack(fill='x', padx=10, pady=10)
         
+        status_title = ctk.CTkLabel(status_frame, text="Status dos Servidores",
+                                   font=ctk.CTkFont(size=14, weight="bold"))
+        status_title.pack(pady=(10, 5))
+        
         self.status_indicator = StatusIndicator(status_frame)
-        self.status_indicator.pack(fill='both', expand=True)
+        self.status_indicator.pack(fill='both', expand=True, padx=10, pady=(0, 10))
         
         # Frame inferior - resumo estatístico
-        stats_frame = ttk.LabelFrame(overview_frame, text="Estatísticas Gerais", padding=10)
+        stats_frame = ctk.CTkFrame(overview_frame)
         stats_frame.pack(fill='both', expand=True, padx=10, pady=(0, 10))
+        
+        stats_title = ctk.CTkLabel(stats_frame, text="Estatísticas Gerais",
+                                  font=ctk.CTkFont(size=14, weight="bold"))
+        stats_title.pack(pady=(10, 5))
         
         self._create_stats_display(stats_frame)
     
     def _create_charts_tab(self):
-        """Cria aba de gráficos."""
-        charts_frame = ttk.Frame(self.notebook)
-        self.notebook.add(charts_frame, text="📈 Gráficos")
+        """Cria aba de gráficos usando CustomTkinter."""
+        # Adiciona aba ao tabview
+        self.tabview.add("📈 Gráficos")
+        charts_frame = self.tabview.tab("📈 Gráficos")
         
         # Controles do gráfico
-        controls_frame = ttk.Frame(charts_frame)
+        controls_frame = ctk.CTkFrame(charts_frame)
         controls_frame.pack(fill='x', padx=10, pady=10)
         
-        ttk.Label(controls_frame, text="Métrica:").pack(side='left', padx=(0, 5))
+        ctk.CTkLabel(controls_frame, text="Métrica:").pack(side='left', padx=(10, 5), pady=10)
         
-        metric_combo = ttk.Combobox(controls_frame, textvariable=self.selected_metric,
-                                   values=['response_time', 'offset', 'delay'],
-                                   state='readonly', width=15)
-        metric_combo.pack(side='left', padx=(0, 10))
-        metric_combo.bind('<<ComboboxSelected>>', self._on_metric_changed)
+        metric_combo = ctk.CTkComboBox(controls_frame, variable=self.selected_metric,
+                                      values=['response_time', 'offset', 'delay'],
+                                      state='readonly', width=150,
+                                      command=self._on_metric_changed)
+        metric_combo.pack(side='left', padx=(0, 10), pady=10)
         
         # Gráfico
-        chart_frame = ttk.LabelFrame(charts_frame, text="Histórico de Métricas", padding=10)
+        chart_frame = ctk.CTkFrame(charts_frame)
         chart_frame.pack(fill='both', expand=True, padx=10, pady=(0, 10))
         
+        chart_title = ctk.CTkLabel(chart_frame, text="Histórico de Métricas",
+                                  font=ctk.CTkFont(size=14, weight="bold"))
+        chart_title.pack(pady=(10, 5))
+        
         self.metrics_chart = MetricsChart(chart_frame, width=800, height=400)
-        self.metrics_chart.pack(fill='both', expand=True)
+        self.metrics_chart.pack(fill='both', expand=True, padx=10, pady=(0, 10))
     
     def _create_details_tab(self):
-        """Cria aba de detalhes."""
-        details_frame = ttk.Frame(self.notebook)
-        self.notebook.add(details_frame, text="📋 Detalhes")
+        """Cria aba de detalhes usando CustomTkinter."""
+        # Adiciona aba ao tabview
+        self.tabview.add("📋 Detalhes")
+        details_frame = self.tabview.tab("📋 Detalhes")
         
         # Tabela de servidores
-        table_frame = ttk.LabelFrame(details_frame, text="Detalhes dos Servidores", padding=10)
+        table_frame = ctk.CTkFrame(details_frame)
         table_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
+        table_title = ctk.CTkLabel(table_frame, text="Detalhes dos Servidores",
+                                  font=ctk.CTkFont(size=14, weight="bold"))
+        table_title.pack(pady=(10, 5))
+        
         self.server_table = ServerTable(table_frame)
-        self.server_table.pack(fill='both', expand=True)
+        self.server_table.pack(fill='both', expand=True, padx=10, pady=(0, 10))
     
     def _create_stats_display(self, parent):
         """
-        Cria display de estatísticas.
+        Cria display de estatísticas usando CustomTkinter.
         
         Args:
             parent: Widget pai
         """
         # Grid de estatísticas
-        stats_grid = ttk.Frame(parent)
-        stats_grid.pack(fill='both', expand=True)
+        stats_grid = ctk.CTkFrame(parent)
+        stats_grid.pack(fill='both', expand=True, padx=10, pady=5)
         
         # Configuração do grid
         for i in range(3):
@@ -250,12 +253,12 @@ class DashboardView:
         
         # Variáveis para estatísticas
         self.stats_vars = {
-            'total_servers': tk.StringVar(value="0"),
-            'available_servers': tk.StringVar(value="0"),
-            'healthy_servers': tk.StringVar(value="0"),
-            'avg_response_time': tk.StringVar(value="0.000s"),
-            'avg_offset': tk.StringVar(value="0.000s"),
-            'availability_percentage': tk.StringVar(value="0.0%")
+            'total_servers': ctk.StringVar(value="0"),
+            'available_servers': ctk.StringVar(value="0"),
+            'healthy_servers': ctk.StringVar(value="0"),
+            'avg_response_time': ctk.StringVar(value="0.000s"),
+            'avg_offset': ctk.StringVar(value="0.000s"),
+            'availability_percentage': ctk.StringVar(value="0.0%")
         }
         
         # Cards de estatísticas
@@ -273,10 +276,10 @@ class DashboardView:
         self._create_stat_card(stats_grid, "Taxa de Disponibilidade", 
                               self.stats_vars['availability_percentage'], 1, 2, '#00BCD4')
     
-    def _create_stat_card(self, parent, title: str, variable: tk.StringVar, 
+    def _create_stat_card(self, parent, title: str, variable: ctk.StringVar, 
                          row: int, col: int, color: str):
         """
-        Cria card de estatística.
+        Cria card de estatística usando CustomTkinter.
         
         Args:
             parent: Widget pai
@@ -286,68 +289,41 @@ class DashboardView:
             col: Coluna no grid
             color: Cor do card
         """
-        card_frame = tk.Frame(parent, bg=color, relief='raised', bd=2)
-        card_frame.grid(row=row, column=col, padx=5, pady=5, sticky='nsew')
+        # Frame do card
+        card_frame = ctk.CTkFrame(parent)
+        card_frame.grid(row=row, column=col, padx=5, pady=5, sticky='ew')
         
         # Título
-        title_label = tk.Label(card_frame, text=title, bg=color, fg='white',
-                              font=('Arial', 10, 'bold'))
+        title_label = ctk.CTkLabel(card_frame, text=title,
+                                  font=ctk.CTkFont(size=12, weight="bold"))
         title_label.pack(pady=(10, 5))
         
         # Valor
-        value_label = tk.Label(card_frame, textvariable=variable, bg=color, fg='white',
-                              font=('Arial', 16, 'bold'))
+        value_label = ctk.CTkLabel(card_frame, textvariable=variable,
+                                  font=ctk.CTkFont(size=16, weight="bold"),
+                                  text_color=color)
         value_label.pack(pady=(0, 10))
     
     def _create_menu(self):
-        """Cria menu da aplicação."""
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
-        
-        # Menu Arquivo
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Arquivo", menu=file_menu)
-        file_menu.add_command(label="Exportar Dados", command=self._on_export_data)
-        file_menu.add_separator()
-        file_menu.add_command(label="Sair", command=self._on_closing)
-        
-        # Menu Visualizar
-        view_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Visualizar", menu=view_menu)
-        view_menu.add_command(label="Atualizar", command=self._on_refresh_data)
-        view_menu.add_separator()
-        view_menu.add_command(label="Limpar Dados", command=self._on_clear_data)
-        
-        # Menu Ajuda
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Ajuda", menu=help_menu)
-        help_menu.add_command(label="Sobre", command=self._show_about)
+        """Cria menu da aplicação usando CustomTkinter (removido - não suportado)."""
+        # CustomTkinter não suporta menus nativos
+        # Funcionalidades de menu podem ser implementadas com botões se necessário
+        pass
     
     def _create_status_bar(self):
-        """Cria barra de status."""
-        self.status_bar = ttk.Frame(self.root)
-        self.status_bar.pack(side='bottom', fill='x')
+        """Cria barra de status usando CustomTkinter."""
+        status_frame = ctk.CTkFrame(self.root)
+        status_frame.pack(side='bottom', fill='x', padx=5, pady=5)
         
-        # Separador
-        ttk.Separator(self.status_bar, orient='horizontal').pack(fill='x')
-        
-        # Status frame
-        status_frame = ttk.Frame(self.status_bar)
-        status_frame.pack(fill='x', padx=5, pady=2)
-        
-        # Informações de status
-        self.status_text = tk.StringVar(value="Pronto")
-        status_label = ttk.Label(status_frame, textvariable=self.status_text)
-        status_label.pack(side='left')
-        
-        # Timestamp
-        self.timestamp_text = tk.StringVar(value="")
-        timestamp_label = ttk.Label(status_frame, textvariable=self.timestamp_text)
-        timestamp_label.pack(side='right')
+        # Status da aplicação
+        self.status_text = ctk.StringVar(value="Pronto")
+        status_label = ctk.CTkLabel(status_frame, textvariable=self.status_text,
+                                   font=ctk.CTkFont(size=10))
+        status_label.pack(side='left', padx=10, pady=5)
     
     def set_callback(self, event: str, callback: Callable):
         """
-        Define callback para eventos da interface.
+        Define callback para evento.
         
         Args:
             event: Nome do evento
@@ -355,6 +331,7 @@ class DashboardView:
         """
         if event in self.callbacks:
             self.callbacks[event] = callback
+            logger.debug(f"Callback definido para evento: {event}")
         else:
             logger.warning(f"Evento desconhecido: {event}")
     
@@ -436,13 +413,13 @@ class DashboardView:
         """
         if is_monitoring:
             self.monitoring_status.set("🟢 Ativo")
-            self.start_button.config(state='disabled')
-            self.stop_button.config(state='normal')
+            self.start_button.configure(state='disabled')
+            self.stop_button.configure(state='normal')
             self.status_text.set("Monitoramento ativo")
         else:
-            self.monitoring_status.set("🔴 Parado")
-            self.start_button.config(state='normal')
-            self.stop_button.config(state='disabled')
+            self.monitoring_status.set("🔴 Inativo")
+            self.start_button.configure(state='normal')
+            self.stop_button.configure(state='disabled')
             self.status_text.set("Monitoramento parado")
     
     def show_message(self, title: str, message: str, msg_type: str = 'info'):
@@ -499,10 +476,10 @@ class DashboardView:
         if self.callbacks['export_data']:
             self.callbacks['export_data']()
     
-    def _on_metric_changed(self, event):
-        """Handler para mudança de métrica no gráfico."""
+    def _on_metric_changed(self, value):
+        """Handler para mudança de métrica no gráfico (CustomTkinter)."""
         if self.metrics_chart:
-            self.metrics_chart.set_metric_type(self.selected_metric.get())
+            self.metrics_chart.set_metric_type(value)
     
     def _on_clear_data(self):
         """Handler para limpar dados."""
