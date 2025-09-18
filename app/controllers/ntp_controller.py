@@ -136,7 +136,7 @@ class NTPController:
             
             metrics = self.ntp_service.check_multiple_servers(
                 servers, 
-                max_workers=self.monitoring_config.max_workers
+                max_workers=self.monitoring_config.max_concurrent_checks
             )
             
             logger.info(f"Métricas coletadas: {len(metrics)} servidores processados")

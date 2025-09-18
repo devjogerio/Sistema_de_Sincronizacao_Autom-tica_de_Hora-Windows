@@ -167,7 +167,7 @@ class ConfigService:
             ],
             "monitoring": {
                 "check_interval": 60,
-                "max_workers": 10,
+                "max_concurrent_checks": 10,
                 "retry_attempts": 3,
                 "retry_delay": 5,
                 "database_file": "ntp_monitor.db"
