@@ -1,0 +1,49 @@
+{
+  "ntp_servers": [
+    {
+      "name": "pool.ntp.org",
+      "address": "pool.ntp.org",
+      "priority": 1,
+      "timeout": 5,
+      "enabled": true
+    },
+    {
+      "name": "time.google.com",
+      "address": "time.google.com",
+      "priority": 2,
+      "timeout": 5,
+      "enabled": true
+    }
+  ],
+  "monitoring": {
+    "check_interval": 60,
+    "max_workers": 10,
+    "retry_attempts": 3,
+    "retry_delay": 5,
+    "database_file": "ntp_monitor.db"
+  },
+  "alerts": {
+    "offset_threshold": 1.0,
+    "response_time_threshold": 5.0,
+    "availability_threshold": 80.0,
+    "email_enabled": false,
+    "console_enabled": true
+  },
+  "email": {
+    "smtp_server": "",
+    "smtp_port": 587,
+    "username": "",
+    "password": "",
+    "from_address": "",
+    "to_addresses": [],
+    "use_tls": true,
+    "enabled": false
+  },
+  "ui": {
+    "theme": "light",
+    "refresh_interval": 30,
+    "chart_history_hours": 24,
+    "show_grid": true,
+    "auto_scale": true
+  }
+}

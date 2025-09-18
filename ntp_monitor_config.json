@@ -1,0 +1,93 @@
+{
+  "servers": [
+    {
+      "name": "Pool NTP Brasil",
+      "address": "br.pool.ntp.org",
+      "timeout": 5,
+      "priority": 1,
+      "enabled": true,
+      "description": "Pool de servidores NTP do Brasil"
+    },
+    {
+      "name": "NIST Time Server",
+      "address": "time.nist.gov",
+      "timeout": 5,
+      "priority": 1,
+      "enabled": true,
+      "description": "Servidor oficial do NIST (EUA)"
+    },
+    {
+      "name": "Google Time",
+      "address": "time.google.com",
+      "timeout": 5,
+      "priority": 2,
+      "enabled": true,
+      "description": "Servidor de tempo do Google"
+    },
+    {
+      "name": "Cloudflare Time",
+      "address": "time.cloudflare.com",
+      "timeout": 5,
+      "priority": 2,
+      "enabled": true,
+      "description": "Servidor de tempo da Cloudflare"
+    },
+    {
+      "name": "Ubuntu NTP",
+      "address": "ntp.ubuntu.com",
+      "timeout": 5,
+      "priority": 3,
+      "enabled": true,
+      "description": "Servidor NTP do Ubuntu"
+    },
+    {
+      "name": "Pool NTP Global",
+      "address": "pool.ntp.org",
+      "timeout": 5,
+      "priority": 2,
+      "enabled": true,
+      "description": "Pool global de servidores NTP"
+    },
+    {
+      "name": "Windows Time",
+      "address": "time.windows.com",
+      "timeout": 10,
+      "priority": 1,
+      "enabled": true,
+      "description": "Servidor NTP Windows Time"
+    }
+  ],
+  "email": {
+    "enabled": false,
+    "smtp_server": "",
+    "smtp_port": 587,
+    "username": "",
+    "password": "",
+    "use_tls": true,
+    "sender_name": "NTP Monitor",
+    "recipients": []
+  },
+  "alerts": {
+    "enabled": true,
+    "check_interval": 60,
+    "high_offset_threshold": 5.0,
+    "slow_response_threshold": 10.0,
+    "availability_threshold": 95.0,
+    "cooldown_minutes": 30
+  },
+  "monitoring": {
+    "update_interval": 30,
+    "history_retention_days": 30,
+    "max_concurrent_checks": 10,
+    "auto_start": true,
+    "log_level": "INFO"
+  },
+  "ui": {
+    "theme": "dark",
+    "auto_refresh": true,
+    "refresh_interval": 5,
+    "show_graphs": true,
+    "window_width": 1200,
+    "window_height": 800
+  }
+}

@@ -1,25 +1,69 @@
+#!/usr/bin/env python3
 """
-Script principal para sincronização automática de data e hora do Windows.
-Implementa execução contínua, tratamento de erros e validações de segurança.
+NTP Monitor - Sistema de Monitoramento de Servidores NTP
+Arquivo principal da aplicação com arquitetura MVC.
+
+Este arquivo serve como ponto de entrada da aplicação,
+inicializando todos os componentes necessários.
 """
 
 import sys
-import time
-import signal
-import argparse
-from datetime import datetime
-from typing import Optional
-import schedule
+import os
+import logging
+from pathlib import Path
 
-from config import Config
-from logger_config import setup_logging, get_logger
-from ntp_client import NTPClient
-from windows_time_sync import WindowsTimeSync
+# Adiciona o diretório da aplicação ao path
+app_dir = Path(__file__).parent
+sys.path.insert(0, str(app_dir))
+
+from app.controllers.dashboard_controller import DashboardController
+from app.utils.logger import setup_logger
 
 # Configuração global
-logger = None
-time_sync = None
 running = True
+
+
+def setup_application():
+    """
+    Configura a aplicação antes da execução.
+    
+    Returns:
+        True se configuração foi bem-sucedida, False caso contrário
+    """
+    try:
+        # Cria diretórios necessários
+        directories = [
+            'logs',
+            'data',
+            'config',
+            'exports'
+        ]
+        
+        for directory in directories:
+            dir_path = app_dir / directory
+            dir_path.mkdir(exist_ok=True)
+        
+        # Configura logging
+        log_file = app_dir / 'logs' / 'ntp_monitor.log'
+        setup_logger(
+            name='ntp_monitor',
+            level=logging.INFO,
+            log_file=str(log_file)
+        )
+        
+        logger = logging.getLogger('ntp_monitor')
+        logger.info("Aplicação NTP Monitor iniciando...")
+        logger.info(f"Diretório da aplicação: {app_dir}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"Erro ao configurar aplicação: {e}")
+        return False
+
+
+
+
 
 def signal_handler(signum, frame):
     """
@@ -33,194 +77,50 @@ def signal_handler(signum, frame):
     logger.info(f"Sinal {signum} recebido. Iniciando parada graceful...")
     running = False
 
-def validate_environment():
-    """
-    Valida o ambiente de execução e configurações.
-    
-    Raises:
-        SystemExit: Se validação falhar
-    """
-    try:
-        # Valida configurações
-        Config.validate_config()
-        logger.info("Configurações validadas com sucesso")
-        
-        # Testa conectividade NTP
-        ntp_client = NTPClient()
-        if not ntp_client.test_connectivity():
-            logger.warning("Falha na conectividade NTP inicial - continuando execução")
-        
-        # Verifica privilégios administrativos
-        time_sync = WindowsTimeSync()
-        if not time_sync.is_admin():
-            logger.error("Privilégios administrativos necessários")
-            logger.error("Execute o script como administrador")
-            sys.exit(1)
-        
-        logger.info("Ambiente validado com sucesso")
-        
-    except ValueError as e:
-        logger.error(f"Erro de configuração: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Erro na validação do ambiente: {e}")
-        sys.exit(1)
-
-def perform_sync():
-    """
-    Executa uma sincronização de tempo com tratamento completo de erros.
-    """
-    try:
-        logger.info("Iniciando ciclo de sincronização")
-        
-        # Verifica status atual
-        status = time_sync.check_sync_status()
-        
-        if 'error' in status:
-            logger.error(f"Erro ao verificar status: {status['error']}")
-            return
-        
-        # Log do status atual
-        logger.info(f"Status atual - Sistema: {status['system_time']}, "
-                   f"Rede: {status['network_time']}, "
-                   f"Diferença: {status['difference_seconds']:.2f}s")
-        
-        # Verifica se sincronização é necessária
-        if not status['needs_synchronization']:
-            logger.info("Sistema já está sincronizado")
-            return
-        
-        if not status['ntp_connectivity']:
-            logger.warning("Sem conectividade NTP - pulando sincronização")
-            return
-        
-        # Executa sincronização
-        success, error_msg = time_sync.sync_system_time()
-        
-        if success:
-            logger.info("Sincronização concluída com sucesso")
-        else:
-            logger.error(f"Falha na sincronização: {error_msg}")
-            
-    except Exception as e:
-        logger.error(f"Erro durante sincronização: {e}")
-
-def run_once():
-    """
-    Executa uma única sincronização e sai.
-    """
-    logger.info("Modo execução única")
-    perform_sync()
-    logger.info("Execução única concluída")
-
-def run_continuous():
-    """
-    Executa sincronização contínua baseada no intervalo configurado.
-    """
-    global running
-    
-    logger.info(f"Iniciando execução contínua - Intervalo: {Config.SYNC_INTERVAL_MINUTES} minutos")
-    
-    # Agenda sincronização periódica
-    schedule.every(Config.SYNC_INTERVAL_MINUTES).minutes.do(perform_sync)
-    
-    # Executa sincronização inicial
-    perform_sync()
-    
-    # Loop principal
-    while running:
-        try:
-            schedule.run_pending()
-            time.sleep(1)
-            
-        except KeyboardInterrupt:
-            logger.info("Interrupção por teclado recebida")
-            break
-        except Exception as e:
-            logger.error(f"Erro no loop principal: {e}")
-            time.sleep(5)  # Pausa antes de tentar novamente
-    
-    logger.info("Execução contínua finalizada")
-
-def run_status_check():
-    """
-    Executa verificação de status sem fazer sincronização.
-    """
-    logger.info("Verificando status de sincronização")
-    
-    try:
-        status = time_sync.check_sync_status()
-        
-        print("\n=== STATUS DE SINCRONIZAÇÃO ===")
-        print(f"Hora do Sistema: {status.get('system_time', 'N/A')}")
-        print(f"Hora da Rede: {status.get('network_time', 'N/A')}")
-        print(f"Diferença: {status.get('difference_seconds', 0):.2f} segundos")
-        print(f"Precisa Sincronizar: {'Sim' if status.get('needs_synchronization', False) else 'Não'}")
-        print(f"Conectividade NTP: {'OK' if status.get('ntp_connectivity', False) else 'Falha'}")
-        print(f"Privilégios Admin: {'Sim' if status.get('is_admin', False) else 'Não'}")
-        print(f"Tolerância: {status.get('tolerance_seconds', 0)} segundos")
-        print(f"Servidor NTP: {status.get('ntp_server', 'N/A')}")
-        
-        if 'error' in status:
-            print(f"Erro: {status['error']}")
-        
-        print("===============================\n")
-        
-    except Exception as e:
-        logger.error(f"Erro ao verificar status: {e}")
-        print(f"Erro ao verificar status: {e}")
-
 def main():
     """
-    Função principal do script.
+    Função principal da aplicação.
+    Inicializa e executa o dashboard NTP Monitor.
     """
-    global logger, time_sync
-    
-    # Configura argumentos da linha de comando
-    parser = argparse.ArgumentParser(description='Sincronização automática de hora do Windows')
-    parser.add_argument('--once', action='store_true', 
-                       help='Executa sincronização uma vez e sai')
-    parser.add_argument('--status', action='store_true',
-                       help='Verifica status de sincronização sem alterar')
-    parser.add_argument('--service', action='store_true',
-                       help='Executa em modo serviço (contínuo)')
-    
-    args = parser.parse_args()
-    
     try:
-        # Inicializa logging
-        setup_logging()
-        logger = get_logger()
+        # Configura aplicação
+        if not setup_application():
+            sys.exit(1)
         
-        logger.info("=== INICIANDO SISTEMA DE SINCRONIZAÇÃO DE TEMPO ===")
-        logger.info(f"Versão Python: {sys.version}")
-        logger.info(f"Argumentos: {sys.argv}")
+        logger = logging.getLogger('ntp_monitor')
         
-        # Inicializa sincronizador
-        time_sync = WindowsTimeSync()
+        # Verifica dependências
+        try:
+            import tkinter
+            import sqlite3
+            import ntplib
+        except ImportError as e:
+            logger.error(f"Dependência não encontrada: {e}")
+            print(f"Erro: Dependência não encontrada - {e}")
+            print("Instale as dependências necessárias e tente novamente.")
+            sys.exit(1)
         
-        # Configura manipuladores de sinal
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # Cria e executa controlador principal
+        logger.info("Inicializando controlador do dashboard...")
+        controller = DashboardController()
         
-        # Valida ambiente
-        validate_environment()
+        # Executa aplicação
+        logger.info("Executando aplicação...")
+        controller.run()
         
-        # Executa modo apropriado
-        if args.status:
-            run_status_check()
-        elif args.once:
-            run_once()
-        else:
-            run_continuous()
-            
+        logger.info("Aplicação finalizada normalmente")
+        
     except KeyboardInterrupt:
-        logger.info("Execução interrompida pelo usuário")
+        logger = logging.getLogger('ntp_monitor')
+        logger.info("Aplicação interrompida pelo usuário (Ctrl+C)")
+        print("\nAplicação interrompida pelo usuário.")
+        
     except Exception as e:
-        logger.error(f"Erro fatal: {e}")
+        logger = logging.getLogger('ntp_monitor')
+        logger.error(f"Erro fatal na aplicação: {e}", exc_info=True)
+        print(f"Erro fatal: {e}")
         sys.exit(1)
-    finally:
-        logger.info("=== FINALIZANDO SISTEMA DE SINCRONIZAÇÃO ===")
+
 
 if __name__ == "__main__":
     main()

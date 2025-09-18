@@ -28,6 +28,48 @@ class NTPClient:
         self.timeout = timeout or Config.NTP_TIMEOUT
         self.ntp_client = ntplib.NTPClient()
         
+    def get_detailed_response(self) -> Optional[dict]:
+        """
+        Obtém resposta detalhada do servidor NTP incluindo métricas avançadas.
+        
+        Returns:
+            dict: Resposta detalhada com métricas ou None em caso de erro
+        """
+        try:
+            logger.info(f"Consultando servidor NTP detalhado: {self.server}")
+            
+            # Realiza consulta NTP
+            response = self.ntp_client.request(self.server, timeout=self.timeout)
+            
+            # Extrai informações detalhadas
+            detailed_info = {
+                'server': self.server,
+                'timestamp': datetime.fromtimestamp(response.tx_time, tz=timezone.utc),
+                'offset': response.offset,
+                'delay': response.delay,
+                'precision': response.precision,
+                'stratum': response.stratum,
+                'ref_id': response.ref_id,
+                'root_delay': response.root_delay,
+                'root_dispersion': response.root_dispersion,
+                'version': response.version,
+                'mode': response.mode,
+                'leap': response.leap
+            }
+            
+            logger.info(f"Resposta detalhada obtida de {self.server}")
+            return detailed_info
+            
+        except ntplib.NTPException as e:
+            logger.error(f"Erro NTP ao consultar {self.server}: {e}")
+            return None
+        except socket.timeout:
+            logger.error(f"Timeout ao consultar servidor {self.server}")
+            return None
+        except Exception as e:
+            logger.error(f"Erro inesperado ao consultar {self.server}: {e}")
+            return None
+        
     def get_network_time(self) -> Optional[datetime]:
         """
         Obtém a hora atual do servidor NTP.
