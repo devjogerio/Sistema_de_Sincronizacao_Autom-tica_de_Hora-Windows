@@ -246,7 +246,7 @@ Contribuições são bem-vindas! Por favor:
 
 ## 👥 Autores
 
-- **Desenvolvedor Principal** - *Trabalho inicial* - [Seu GitHub](https://github.com/devjogerio)
+- **Desenvolvedor Principal** - *Trabalho inicial* - [Meu GitHub](https://github.com/devjogerio)
 
 ## 🙏 Agradecimentos
 
